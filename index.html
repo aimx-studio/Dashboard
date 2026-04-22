@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIMAX — Dashboard de Pedidos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ████ LOGIN OVERLAY ████ -->
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-logo-mark"></div>
+      <span class="login-logo-text">AIMAX</span>
+      <span class="login-tagline">Restaurant Intelligence</span>
+    </div>
+    <div class="login-form">
+      <label class="login-label">CONTRASEÑA DE ACCESO</label>
+      <input
+        type="password"
+        id="passwordInput"
+        class="login-input"
+        placeholder="••••••••"
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter') handleLogin()"
+      />
+      <button class="btn-login" onclick="handleLogin()">
+        <span>INGRESAR</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <p class="login-error" id="loginError">Contraseña incorrecta. Intenta de nuevo.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ████ MAIN APP ████ -->
+<div id="app" class="app hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <span class="brand-name">AIMAX</span>
+        <span class="brand-sub">Restaurant OS</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active" onclick="showSection('orders')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span>Pedidos</span>
+      </a>
+      <a class="nav-item" onclick="showSection('metrics')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Métricas</span>
+      </a>
+      <a class="nav-item" onclick="showSection('config')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <span>Configurar</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sync-status" id="syncStatus">
+        <span class="sync-dot"></span>
+        <span class="sync-label">En vivo</span>
+      </div>
+      <button class="btn-logout" onclick="handleLogout()">Salir</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" onclick="toggleSidebar()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="page-title" id="pageTitle">Pedidos</div>
+      </div>
+      <div class="topbar-right">
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          LIVE
+        </div>
+        <span class="topbar-time" id="topbarTime">--:--</span>
+      </div>
+    </div>
+
+    <!-- ── SECTION: ORDERS ── -->
+    <section id="section-orders" class="section active">
+
+      <!-- METRICS STRIP -->
+      <div class="metrics-strip">
+        <div class="metric-card">
+          <span class="metric-label">HOY</span>
+          <span class="metric-value" id="metricToday">0</span>
+          <span class="metric-unit">pedidos</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">MES</span>
+          <span class="metric-value" id="metricMonth">0</span>
+          <span class="metric-unit">pedidos</span>
+        </div>
+        <div class="metric-card highlight">
+          <span class="metric-label">TOP PRODUCTO</span>
+          <span class="metric-value small" id="metricTop">—</span>
+          <span class="metric-unit">más vendido</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">ÚLTIMA ACT.</span>
+          <span class="metric-value small" id="metricLastUpdate">--:--</span>
+          <span class="metric-unit">actualización</span>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filters-bar">
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="day" onclick="setFilter('day', this)">Hoy</button>
+          <button class="filter-tab" data-filter="week" onclick="setFilter('week', this)">Semana</button>
+          <button class="filter-tab" data-filter="month" onclick="setFilter('month', this)">Mes</button>
+          <button class="filter-tab" data-filter="year" onclick="setFilter('year', this)">Año</button>
+          <button class="filter-tab" data-filter="all" onclick="setFilter('all', this)">Todo</button>
+        </div>
+        <div class="filter-right">
+          <span class="orders-count" id="ordersCount">0 pedidos</span>
+          <div class="export-dropdown" id="exportDropdown">
+            <button class="btn-export" onclick="toggleExportMenu()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar
+            </button>
+            <div class="export-menu" id="exportMenu">
+              <button onclick="exportExcel(); closeExportMenu()">📊 Descargar Excel</button>
+              <button onclick="exportPDF(); closeExportMenu()">📄 Descargar PDF</button>
+            </div>
+          </div>
+          <button class="btn-refresh" onclick="fetchOrders()" title="Actualizar ahora">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ORDERS LIST -->
+      <div class="orders-grid" id="ordersGrid">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">📋</div>
+          <p>Cargando pedidos...</p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── SECTION: METRICS ── -->
+    <section id="section-metrics" class="section">
+      <div class="section-header">
+        <h2>Métricas de Ventas</h2>
+      </div>
+      <div class="metrics-grid">
+        <div class="metrics-big-card">
+          <span class="mbcard-label">Pedidos Hoy</span>
+          <span class="mbcard-number" id="m2Today">0</span>
+        </div>
+        <div class="metrics-big-card">
+          <span class="mbcard-label">Pedidos Esta Semana</span>
+          <span class="mbcard-number" id="m2Week">0</span>
+        </div>
+        <div class="metrics-big-card">
+          <span class="mbcard-label">Pedidos Este Mes</span>
+          <span class="mbcard-number" id="m2Month">0</span>
+        </div>
+        <div class="metrics-big-card gold">
+          <span class="mbcard-label">Total del Año</span>
+          <span class="mbcard-number" id="m2Year">0</span>
+        </div>
+      </div>
+      <div class="top-products-card">
+        <h3 class="tpc-title">Top Productos</h3>
+        <div id="topProductsList" class="top-products-list">
+          <p style="color:#555;font-size:13px">Sin datos disponibles</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION: CONFIG ── -->
+    <section id="section-config" class="section">
+      <div class="section-header">
+        <h2>Configuración</h2>
+      </div>
+
+      <div class="config-card">
+        <h3 class="config-section-title">🟢 Conexión a Supabase</h3>
+        <p class="config-desc">Pega las credenciales de tu proyecto Supabase:</p>
+        <label class="login-label" style="display:block;margin-bottom:6px;margin-top:4px">PROJECT URL</label>
+        <input type="text" id="supabaseUrlInput" class="config-input" placeholder="https://xxxxxxxxxxxx.supabase.co" />
+        <label class="login-label" style="display:block;margin-bottom:6px;margin-top:12px">ANON PUBLIC KEY</label>
+        <input type="text" id="supabaseKeyInput" class="config-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." />
+        <label class="login-label" style="display:block;margin-bottom:6px;margin-top:12px">NOMBRE DE LA TABLA</label>
+        <input type="text" id="supabaseTableInput" class="config-input" placeholder="pedidos" />
+        <button class="btn-config-save" style="margin-top:14px" onclick="saveSupabaseConfig()">💾 Guardar y Conectar</button>
+        <p class="config-msg" id="supabaseMsg"></p>
+        <div class="config-info" style="margin-top:16px">
+          <strong>¿Cómo obtener tus credenciales?</strong>
+          <ol>
+            <li>Entra a <strong>supabase.com</strong> y crea tu proyecto gratis</li>
+            <li>Ve a <em>Project Settings → API</em></li>
+            <li>Copia la <strong>Project URL</strong> y la <strong>anon public key</strong></li>
+            <li>En <em>Table Editor</em>, crea una tabla llamada <code>pedidos</code></li>
+            <li>Pega todo aquí arriba y haz clic en Guardar y Conectar</li>
+          </ol>
+          <p style="margin-top:8px"><strong>Columnas requeridas en la tabla <code>pedidos</code>:</strong></p>
+          <code>id (int8 PK) · created_at (timestamptz) · fecha (text) · hora (text) · cliente (text) · telefono (text) · pedido (text) · entrega (text) · direccion (text) · pago (text) · total (text)</code>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <h3 class="config-section-title">🔐 Cambiar Contraseña</h3>
+        <input type="password" id="newPassInput" class="config-input" placeholder="Nueva contraseña" />
+        <input type="password" id="newPassConfirm" class="config-input" placeholder="Confirmar contraseña" style="margin-top:10px" />
+        <button class="btn-config-save" onclick="changePassword()">Cambiar Contraseña</button>
+        <p class="config-msg" id="passMsg"></p>
+      </div>
+
+      <div class="config-card">
+        <h3 class="config-section-title">⚙️ Nombre del Restaurante</h3>
+        <input type="text" id="restaurantNameInput" class="config-input" placeholder="Nombre del restaurante" />
+        <button class="btn-config-save" onclick="saveRestaurantName()">Guardar Nombre</button>
+      </div>
+
+      <div class="config-card">
+        <h3 class="config-section-title">🖨️ Configuración de Ticket de Impresión</h3>
+        <p class="config-desc">Elige el tamaño según tu impresora térmica:</p>
+
+        <div class="ticket-size-selector" id="ticketSizeSelector">
+          <div class="ticket-size-option" data-width="220" data-font="11" onclick="selectTicketSize(this)">
+            <div class="tso-label">58 mm</div>
+            <div class="tso-sub">Impresora pequeña<br><span>220px · fuente 11px</span></div>
+          </div>
+          <div class="ticket-size-option" data-width="300" data-font="13" onclick="selectTicketSize(this)">
+            <div class="tso-label">80 mm</div>
+            <div class="tso-sub">Impresora estándar<br><span>300px · fuente 13px</span></div>
+          </div>
+          <div class="ticket-size-option" data-width="360" data-font="14" onclick="selectTicketSize(this)">
+            <div class="tso-label">110 mm</div>
+            <div class="tso-sub">Impresora grande<br><span>360px · fuente 14px</span></div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:120px">
+            <label class="login-label" style="display:block;margin-bottom:6px">ANCHO PERSONALIZADO (px)</label>
+            <input type="number" id="ticketWidthInput" class="config-input" placeholder="ej: 280" min="150" max="600" />
+          </div>
+          <div style="flex:1;min-width:120px">
+            <label class="login-label" style="display:block;margin-bottom:6px">TAMAÑO DE FUENTE (px)</label>
+            <input type="number" id="ticketFontInput" class="config-input" placeholder="ej: 12" min="8" max="20" />
+          </div>
+        </div>
+
+        <button class="btn-config-save" style="margin-top:14px" onclick="saveTicketSize()">Guardar Configuración de Ticket</button>
+        <p class="config-msg" id="ticketSizeMsg"></p>
+
+        <div class="config-info" style="margin-top:16px">
+          <strong>Tamaños más comunes:</strong>
+          <ul style="margin-left:18px;margin-top:6px;line-height:2">
+            <li><code>58mm</code> — Mini impresoras portátiles (Bluetooth/USB)</li>
+            <li><code>80mm</code> — El estándar más usado en restaurantes y cafeterías</li>
+            <li><code>110mm</code> — Impresoras de cocina o tickets más grandes</li>
+          </ul>
+          <p style="margin-top:8px">Después de guardar, haz clic en <strong>Imprimir</strong> en cualquier pedido para ver el ticket con el nuevo tamaño.</p>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<!-- ████ PRINT MODAL (reemplaza la ventana emergente) ████ -->
+<div id="printModalOverlay" class="print-modal-overlay hidden">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+    <div id="ticketContainer" class="ticket"></div>
+    <div class="print-modal-actions" style="width:300px">
+      <button onclick="window.print()" class="btn-action btn-print-now">🖨️ Imprimir</button>
+      <button onclick="closePrintModal()" class="btn-action btn-close-modal">✕ Cerrar</button>
+    </div>
+  </div>
+</div>
+<script src="scrip.js"></script>
+</body>
+</html>
