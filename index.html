@@ -14,8 +14,7 @@
 <div id="loginOverlay" class="login-overlay">
   <div class="login-card">
     <div class="login-brand">
-      <div class="login-logo-mark"></div>
-      <span class="login-logo-text">AIMAX</span>
+      <img src="logo.png" style="width:200px;margin-bottom:8px">
       <span class="login-tagline">Restaurant Intelligence</span>
     </div>
     <div class="login-form">
@@ -218,9 +217,9 @@
       </div>
 
       <!-- Local vs Domicilio -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
         <div class="top-products-card">
-          <h3 class="tpc-title">🏠 En Local</h3>
+          <h3 class="tpc-title">🏠 Comer En El Local</h3>
           <div style="display:flex;align-items:center;gap:16px;margin-top:12px">
             <div>
               <div class="mbcard-number" id="vLocal" style="font-size:28px">$0</div>
@@ -237,6 +236,16 @@
               <div style="font-size:12px;color:#888;margin-top:4px"><span id="vDomCount">0</span> pedidos</div>
             </div>
             <div class="entrega-badge badge-dom" style="font-size:11px;padding:4px 10px">DOMICILIO</div>
+          </div>
+        </div>
+        <div class="top-products-card">
+          <h3 class="tpc-title">🏃 Recoger</h3>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:12px">
+            <div>
+              <div class="mbcard-number" id="vRecoger" style="font-size:28px">$0</div>
+              <div style="font-size:12px;color:#888;margin-top:4px"><span id="vRecogerCount">0</span> pedidos</div>
+            </div>
+            <div class="entrega-badge badge-local" style="font-size:11px;padding:4px 10px">RECOGER</div>
           </div>
         </div>
       </div>
@@ -494,6 +503,7 @@
     </div>
   </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="scrip.js"></script>
 </body>
 </html>

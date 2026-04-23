@@ -359,15 +359,21 @@ function renderVentas() {
     if (el) el.textContent = formatMoney(total);
   });
 
-  // Local vs Domicilio (todos los datos)
-  const localOrders = allOrders.filter(o => !o.entrega || o.entrega.toLowerCase().includes('local'));
-  const domOrders   = allOrders.filter(o => o.entrega  && o.entrega.toLowerCase().includes('dom'));
-  const localTotal  = localOrders.reduce((a, o) => a + parseTotal(o.total), 0);
-  const domTotal    = domOrders.reduce((a, o) => a + parseTotal(o.total), 0);
+  // Local vs Domicilio vs Recoger
+  const localOrders   = allOrders.filter(o => o.entrega && (o.entrega.toLowerCase().includes('local') || o.entrega.toLowerCase().includes('comer')));
+  const domOrders     = allOrders.filter(o => o.entrega && o.entrega.toLowerCase().includes('dom'));
+  const recogerOrders = allOrders.filter(o => o.entrega && o.entrega.toLowerCase().includes('comer'));
+  const localTotal    = localOrders.reduce((a, o) => a + parseTotal(o.total), 0);
+  const domTotal      = domOrders.reduce((a, o) => a + parseTotal(o.total), 0);
+  const recogerTotal  = recogerOrders.reduce((a, o) => a + parseTotal(o.total), 0);
   document.getElementById('vLocal').textContent = formatMoney(localTotal);
   document.getElementById('vLocalCount').textContent = localOrders.length;
   document.getElementById('vDom').textContent   = formatMoney(domTotal);
   document.getElementById('vDomCount').textContent   = domOrders.length;
+  if (document.getElementById('vRecoger')) {
+    document.getElementById('vRecoger').textContent = formatMoney(recogerTotal);
+    document.getElementById('vRecogerCount').textContent = recogerOrders.length;
+  }
 
   // Ventas por producto
   renderVentasProducto();
@@ -857,16 +863,46 @@ function exportExcel() {
   const orders = getFilteredSorted();
   if (!orders.length) { showMsg('No hay pedidos para exportar', 'red'); return; }
   const period = getPeriodLabel();
-  const limpiar = v => String(v || '').replace(/•\s*/g, '').replace(/\s+/g, ' ').trim();
-  const headers = ['#','Fecha','Hora','Cliente','Telefono','Platos','Entrega','Direccion','Metodo de Pago','Total'];
-  const rows = orders.map((o, i) => {
-    const platos = (o.items && o.items.length > 0) ? o.items.map(p => '• ' + limpiar(p)).join('\n') : '• ' + limpiar(o.pedido);
-    return [i+1, o.fecha, o.hora, limpiar(o.cliente), o.telefono||'', platos, o.entrega||'', limpiar(o.direccion||''), limpiar(o.pago||''), o.total].map(v => `"${String(v).replace(/"/g,'""')}"`).join(';');
+  const limpiar = v => String(v || '').replace(/[•\-\*]\s*/g, '').replace(/\s+/g, ' ').trim();
+
+  const filas = orders.map((o, i) => {
+    const platos = (o.items&&o.items.length>0)
+      ? o.items.map(p => `<p style="margin:2px 0">${limpiar(p)}</p>`).join('')
+      : limpiar(o.pedido);
+    const totalTexto = String(o.total||'').trim();
+    return `<tr>
+      <td style="text-align:center">${i+1}</td>
+      <td>${o.fecha}</td>
+      <td>${o.hora||''}</td>
+      <td><b>${limpiar(o.cliente)}</b><br>${o.telefono||''}</td>
+      <td style="min-width:180px">${platos}</td>
+      <td>${o.entrega||''}</td>
+      <td>${limpiar(o.direccion||'')}</td>
+      <td>${limpiar(o.pago||'')}</td>
+      <td style="font-weight:bold;mso-number-format:'\@'">${totalTexto}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+  <head><meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 11px; }
+    table { border-collapse: collapse; width: 100%; }
+    th { background: #111111; color: #D4AF37; padding: 8px; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+    td { padding: 8px; vertical-align: top; border: 1px solid #ddd; font-size: 14px; }
+    tr:nth-child(even) td { background: #fafafa; }
+  </style>
+  </head>
+  <body><table>
+    <thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Platos</th><th>Entrega</th><th>Dirección</th><th>Pago</th><th>Total</th></tr></thead>
+    <tbody>${filas}</tbody>
+  </table></body></html>`;
+
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `AIMAX_Pedidos_${period.replace(/ /g,'_')}.xls`
   });
-  const BOM = '\uFEFF';
-  const csv = BOM + headers.join(';') + '\n' + rows.join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: `AIMAX_Pedidos_${period.replace(/ /g,'_')}_${new Date().toLocaleDateString('es')}.csv` });
   a.click();
   URL.revokeObjectURL(a.href);
   showMsg('Excel descargado ✓', 'green');
@@ -883,7 +919,7 @@ function exportPDF() {
     <tr>
       <td>${i+1}</td><td>${o.fecha}</td><td>${o.hora||'—'}</td>
       <td><strong>${o.cliente}</strong>${o.telefono?'<br><small>'+o.telefono+'</small>':''}</td>
-      <td>${o.pedido}</td>
+      <td>${o.items&&o.items.length>0 ? o.items.map(i=>'• '+i.replace(/^[•\-\*]\s*/,'')).join('<br>') : o.pedido}</td>
       <td><span class="badge ${o.entrega&&o.entrega.toLowerCase().includes('dom')?'dom':'local'}">${o.entrega||'—'}</span></td>
       <td>${o.direccion||'—'}</td><td>${o.pago||'—'}</td><td class="total">${o.total}</td>
     </tr>`).join('');
@@ -897,7 +933,10 @@ function exportPDF() {
   <div class="summary">
     <div class="summary-item"><b>${orders.length}</b><span>Total Pedidos</span></div>
     <div class="summary-item"><b>${orders.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('dom')).length}</b><span>Domicilios</span></div>
-    <div class="summary-item"><b>${orders.filter(o=>!o.entrega||o.entrega.toLowerCase().includes('local')).length}</b><span>En Local</span></div>
+
+    <div class="summary-item"><b>${orders.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('local')).length}</b><span>Recoger En El Local</span></div>
+    <div class="summary-item"><b>${orders.filter(o=>o.entrega&&o.entrega.toLowerCase().includes('comer')).length}</b><span>Comer Aquí</span></div>
+
   </div>
   <table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Platos</th><th>Entrega</th><th>Dirección</th><th>Pago</th><th>Total</th></tr></thead>
   <tbody>${rows}</tbody></table>
@@ -905,8 +944,13 @@ function exportPDF() {
   <script>window.onload=()=>window.print();<\/script></body></html>`;
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
-  window.open(URL.createObjectURL(blob), '_blank');
-  showMsg('PDF listo para imprimir ✓', 'green');
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `AIMAX_Reporte_${period.replace(/ /g,'_')}_${new Date().toLocaleDateString('es')}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showMsg('PDF descargado ✓', 'green');
 }
 
 /* ── UTILS ── */
