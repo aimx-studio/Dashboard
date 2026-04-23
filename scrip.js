@@ -360,9 +360,9 @@ function renderVentas() {
   });
 
   // Local vs Domicilio vs Recoger
-  const localOrders   = allOrders.filter(o => o.entrega && (o.entrega.toLowerCase().includes('local') || o.entrega.toLowerCase().includes('comer')));
-  const domOrders     = allOrders.filter(o => o.entrega && o.entrega.toLowerCase().includes('dom'));
-  const recogerOrders = allOrders.filter(o => o.entrega && o.entrega.toLowerCase().includes('comer'));
+  const localOrders   = allOrders.filter(o => o.entrega && o.entrega.toLowerCase() === 'local');
+  const domOrders     = allOrders.filter(o => o.entrega && o.entrega.toLowerCase() === 'domicilio');
+  const recogerOrders = allOrders.filter(o => o.entrega && o.entrega.toLowerCase() === 'comer');
   const localTotal    = localOrders.reduce((a, o) => a + parseTotal(o.total), 0);
   const domTotal      = domOrders.reduce((a, o) => a + parseTotal(o.total), 0);
   const recogerTotal  = recogerOrders.reduce((a, o) => a + parseTotal(o.total), 0);
