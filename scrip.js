@@ -349,7 +349,11 @@ function renderTopProducts(orders) {
 function renderVentas() {
   if (!allOrders.length) return;
 
-  // Tarjetas resumen de dinero
+  // Leer el filtro seleccionado
+  const filtro = document.getElementById('ventasMesFilter')?.value || 'all';
+  const base = filterOrders(allOrders, filtro === 'all' ? undefined : filtro);
+
+  // Tarjetas resumen de dinero — siempre muestran el período seleccionado
   const periods = ['day','week','month','year'];
   const ids     = ['vToday','vWeek','vMonth','vYear'];
   periods.forEach((p, i) => {
@@ -359,10 +363,10 @@ function renderVentas() {
     if (el) el.textContent = formatMoney(total);
   });
 
-  // Local vs Domicilio vs Recoger
-  const localOrders   = allOrders.filter(o => o.entrega && o.entrega.toLowerCase() === 'local');
-  const domOrders     = allOrders.filter(o => o.entrega && o.entrega.toLowerCase() === 'domicilio');
-  const recogerOrders = allOrders.filter(o => o.entrega && o.entrega.toLowerCase() === 'comer');
+  // Local vs Domicilio vs Comer — filtrados por período seleccionado
+  const localOrders   = base.filter(o => o.entrega && o.entrega.toLowerCase() === 'local');
+  const domOrders     = base.filter(o => o.entrega && o.entrega.toLowerCase() === 'domicilio');
+  const recogerOrders = base.filter(o => o.entrega && o.entrega.toLowerCase() === 'comer');
   const localTotal    = localOrders.reduce((a, o) => a + parseTotal(o.total), 0);
   const domTotal      = domOrders.reduce((a, o) => a + parseTotal(o.total), 0);
   const recogerTotal  = recogerOrders.reduce((a, o) => a + parseTotal(o.total), 0);

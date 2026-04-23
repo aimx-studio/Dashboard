@@ -187,8 +187,12 @@
         <h2>Ventas & Ingresos</h2>
         <div class="section-header-actions">
           <select id="ventasMesFilter" class="config-input" style="width:auto;padding:6px 12px" onchange="renderVentas()">
-            <option value="all">Todo el período</option>
-          </select>
+  <option value="month" selected>Este mes</option>
+  <option value="day">Hoy</option>
+  <option value="week">Esta semana</option>
+  <option value="year">Este año</option>
+  <option value="all">Todo el período</option>
+</select>
           <button class="btn-export" onclick="exportVentasExcel()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Excel
@@ -217,7 +221,7 @@
       </div>
 
       <!-- Local vs Domicilio -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:20px"></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:20px">
         <div class="top-products-card">
           <h3 class="tpc-title">🏠 Comer En El Local</h3>
           <div style="display:flex;align-items:center;gap:16px;margin-top:12px">
