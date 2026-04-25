@@ -116,12 +116,13 @@ function parseSupabaseRow(row, idx) {
   const direccion= row.Direccion|| row.direccion|| '';
   const pago     = row.Pago     || row.pago     || '';
   const total    = row.Total    || row.total    || '';
+  const extras   = row.Extras    || row.extras    || '';
   let hora = row.hora || '';
   const horaMatch = fechaRaw.match(/(\d{1,2}:\d{2}(:\d{2})?)/);
   if (horaMatch && !hora) hora = horaMatch[1];
   const fecha = fechaRaw.replace(/\s+\d{1,2}:\d{2}(:\d{2})?/, '').trim();
   const dateObj = parseDate(fechaRaw, hora);
-  return { id: `order-${row.id || idx+1}`, index: row.id || idx+1, fecha, hora, cliente, telefono, pedido, entrega, direccion, pago, total, dateObj, items: parseItems(pedido) };
+  return { id: `order-${row.id || idx+1}`, index: row.id || idx+1, fecha, hora, cliente, telefono, pedido, entrega, direccion, pago, total, extras, dateObj, items: parseItems(pedido) };
 }
 
 function parseRow(row, idx) {
@@ -732,7 +733,7 @@ function printOrder(encodedData) {
     </div>
     ${order.entrega  ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">ENTREGA</span><span class="ticket-info-value">${esc(order.entrega)}</span></div>` : ''}
     ${order.direccion? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">DIRECCIÓN</span><span class="ticket-info-value" style="max-width:60%;text-align:right">${esc(order.direccion)}</span></div>` : ''}
-    ${order.pago     ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">PAGO</span><span class="ticket-info-value">${esc(order.pago)}</span></div>` : ''}
+    ${order.pago     ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">PAGO</span><span class="ticket-info-value">${esc(order.pago)}</span></div>` : ''}${order.extras ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">📝 EXTRAS</span></div><div style="font-size:12px;margin-bottom:6px;padding-left:4px">${esc(order.extras)}</div>` : ''}
     ${totalHtml}
     <div class="ticket-footer">
       <div>¡Gracias por tu pedido!</div>
