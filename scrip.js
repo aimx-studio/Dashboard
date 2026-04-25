@@ -271,7 +271,7 @@ function createOrderCard(order) {
     id: order.id, index: order.index, cliente: order.cliente,
     telefono: order.telefono, fecha: order.fecha, hora: order.hora,
     pedido: order.pedido, items: order.items, entrega: order.entrega,
-    direccion: order.direccion, pago: order.pago, total: order.total
+    direccion: order.direccion, pago: order.pago, extras: order.extras, total: order.total
   }));
 
   return `
@@ -731,9 +731,10 @@ function printOrder(encodedData) {
       <div class="ticket-items-title">Detalle del Pedido</div>
       ${itemsHtml || `<div class="ticket-item">${esc(order.pedido||'—')}</div>`}
     </div>
+    ${order.extras   ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">📝 EXTRAS</span></div><div style="font-size:12px;margin-bottom:6px;padding-left:4px">${esc(order.extras)}</div>` : ''}
     ${order.entrega  ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">ENTREGA</span><span class="ticket-info-value">${esc(order.entrega)}</span></div>` : ''}
     ${order.direccion? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">DIRECCIÓN</span><span class="ticket-info-value" style="max-width:60%;text-align:right">${esc(order.direccion)}</span></div>` : ''}
-    ${order.pago     ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">PAGO</span><span class="ticket-info-value">${esc(order.pago)}</span></div>` : ''}${order.extras ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">📝 EXTRAS</span></div><div style="font-size:12px;margin-bottom:6px;padding-left:4px">${esc(order.extras)}</div>` : ''}
+    ${order.pago     ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">PAGO</span><span class="ticket-info-value">${esc(order.pago)}</span></div>` : ''}
     ${totalHtml}
     <div class="ticket-footer">
       <div>¡Gracias por tu pedido!</div>
