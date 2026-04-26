@@ -233,6 +233,11 @@ function filterOrders(orders, period) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   switch (p) {
     case 'day':   return orders.filter(o => o.dateObj >= today);
+    case 'yesterday': {
+  const ayer = new Date(today);
+  ayer.setDate(today.getDate() - 1);
+  return orders.filter(o => o.dateObj >= ayer && o.dateObj < today);
+}
     case 'week':  { const ws = new Date(today); ws.setDate(today.getDate() - today.getDay()); return orders.filter(o => o.dateObj >= ws); }
     case 'month': return orders.filter(o => o.dateObj >= new Date(now.getFullYear(), now.getMonth(), 1));
     case 'year':  return orders.filter(o => o.dateObj >= new Date(now.getFullYear(), 0, 1));
