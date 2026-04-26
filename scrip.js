@@ -381,9 +381,9 @@ function renderVentas() {
   });
 
   // Local vs Domicilio vs Comer — filtrados por período seleccionado
-  const localOrders   = base.filter(o => o.entrega && o.entrega.toLowerCase() === 'local');
-  const domOrders     = base.filter(o => o.entrega && o.entrega.toLowerCase() === 'domicilio');
-  const recogerOrders = base.filter(o => o.entrega && o.entrega.toLowerCase() === 'comer');
+  const localOrders   = base.filter(o => o.entrega && o.entrega.toLowerCase().includes('recoger'));
+const domOrders     = base.filter(o => o.entrega && o.entrega.toLowerCase().includes('domicilio'));
+const recogerOrders = base.filter(o => o.entrega && o.entrega.toLowerCase().includes('comer'));
   const localTotal    = localOrders.reduce((a, o) => a + parseTotal(o.total), 0);
   const domTotal      = domOrders.reduce((a, o) => a + parseTotal(o.total), 0);
   const recogerTotal  = recogerOrders.reduce((a, o) => a + parseTotal(o.total), 0);
