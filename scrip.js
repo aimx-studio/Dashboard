@@ -112,17 +112,21 @@ function parseSupabaseRow(row, idx) {
   const cliente  = row.Nombre   || row.cliente  || 'Cliente sin nombre';
   const telefono = row.Telefono || row.telefono || '';
   const pedido   = row.Platos   || row.pedido   || '';
-  const entrega  = row.Entrega  || row.entrega  || '';
+  const entregaRaw = row.Entrega || row.entrega || '';
+const entrega = entregaRaw.toLowerCase() === 'comer' ? 'Comer en el local'
+              : entregaRaw.toLowerCase() === 'local' ? 'Recoger en el local'
+              : entregaRaw;
   const direccion= row.Direccion|| row.direccion|| '';
   const pago     = row.Pago     || row.pago     || '';
   const total    = row.Total    || row.total    || '';
   const extras   = row.Extras    || row.extras    || '';
+  const efectivo = row.Efectivo || row.efectivo || '';
   let hora = row.hora || '';
   const horaMatch = fechaRaw.match(/(\d{1,2}:\d{2}(:\d{2})?)/);
   if (horaMatch && !hora) hora = horaMatch[1];
   const fecha = fechaRaw.replace(/\s+\d{1,2}:\d{2}(:\d{2})?/, '').trim();
   const dateObj = parseDate(fechaRaw, hora);
-  return { id: `order-${row.id || idx+1}`, index: row.id || idx+1, fecha, hora, cliente, telefono, pedido, entrega, direccion, pago, total, extras, dateObj, items: parseItems(pedido) };
+  return { id: `order-${row.id || idx+1}`, index: row.id || idx+1, fecha, hora, cliente, telefono, pedido, entrega, direccion, pago, total, extras, efectivo, dateObj, items: parseItems(pedido) };
 }
 
 function parseRow(row, idx) {
@@ -319,14 +323,26 @@ function updateMetrics() {
 
 function getTopProduct(orders) {
   const freq = {};
-  orders.forEach(o => o.items.forEach(item => { const clean = item.replace(/^\d+x?\s*/i, '').trim(); if (clean) freq[clean] = (freq[clean] || 0) + 1; }));
+  orders.forEach(o => o.items.forEach(item => {
+  const m1 = item.match(/^(\d+)\s*[×x]\s*(.+)/i);        // nuevo: "1 × Nombre"
+  const m2 = item.match(/^(.+?)\s*[×x]\s*(\d+)$/i);      // viejo: "Nombre ×1"
+  const qty = m1 ? parseInt(m1[1]) : m2 ? parseInt(m2[2]) : 1;
+  const clean = m1 ? m1[2].replace(/\s*—.*$/, '').trim() : m2 ? m2[1].replace(/^[•\s]+/, '').trim() : item.replace(/^[•\s]+/, '').trim();
+  if (clean) freq[clean] = (freq[clean] || 0) + qty;
+}));
   const sorted = Object.entries(freq).sort((a,b) => b[1]-a[1]);
   return sorted.length ? sorted[0][0] : null;
 }
 
 function renderTopProducts(orders) {
   const freq = {};
-  orders.forEach(o => o.items.forEach(item => { const clean = item.replace(/^\d+x?\s*/i, '').trim(); if (clean) freq[clean] = (freq[clean] || 0) + 1; }));
+  orders.forEach(o => o.items.forEach(item => {
+  const m1 = item.match(/^(\d+)\s*[×x]\s*(.+)/i);        // nuevo: "1 × Nombre"
+  const m2 = item.match(/^(.+?)\s*[×x]\s*(\d+)$/i);      // viejo: "Nombre ×1"
+  const qty = m1 ? parseInt(m1[1]) : m2 ? parseInt(m2[2]) : 1;
+  const clean = m1 ? m1[2].replace(/\s*—.*$/, '').trim() : m2 ? m2[1].replace(/^[•\s]+/, '').trim() : item.replace(/^[•\s]+/, '').trim();
+  if (clean) freq[clean] = (freq[clean] || 0) + qty;
+}));
   const sorted = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0, 8);
   const maxVal = sorted.length ? sorted[0][1] : 1;
   const list = document.getElementById('topProductsList');
@@ -399,9 +415,10 @@ function renderVentasProducto() {
   const freq = {};
   orders.forEach(o => {
     o.items.forEach(item => {
-      const m = item.match(/^(\d+)x?\s+(.+)/i);
-      const qty  = m ? parseInt(m[1]) : 1;
-      const name = m ? m[2].trim() : item.replace(/^\d+x?\s*/i,'').trim();
+      // DESPUÉS
+const m = item.match(/^(.+?)\s*[×x]\s*(\d+)$/i) || item.match(/^(\d+)[x×]\s*(.+)/i);
+const qty  = m ? parseInt(m[2] ?? m[1]) : 1;
+const name = (m ? (m[1].match(/^\d+$/) ? m[2] : m[1]) : item).trim();
       if (name) freq[name] = (freq[name] || 0) + qty;
     });
   });
@@ -486,7 +503,7 @@ function renderClientes() {
     }
     clientes[key].pedidos.push(o);
     o.items.forEach(item => {
-      const name = item.replace(/^\d+x?\s*/i,'').trim();
+      const name = item.replace(/^(.+?)\s*[×x]\s*\d+$/i, '$1').replace(/^\d+[x×]\s*/i,'').trim();
       if (name) clientes[key].productos[name] = (clientes[key].productos[name] || 0) + 1;
     });
   });
@@ -701,11 +718,11 @@ function printOrder(encodedData) {
   const items = order.items && order.items.length > 0 ? order.items : (order.pedido || '').split(/[,\n]/).map(s => s.trim()).filter(Boolean);
 
   function parseQtyItem(line) {
-    const m1 = line.match(/^(\d+)x?\s+(.+)/i);
-    const m2 = line.match(/^(.+?)\s+x(\d+)$/i);
-    if (m1) return { qty: m1[1], name: m1[2].trim() };
-    if (m2) return { qty: m2[2], name: m2[1].trim() };
-    return { qty: '1', name: line };
+    const m1 = line.match(/^(\d+)\s*[×x]\s*(.+)/i);
+const m2 = line.match(/^(.+?)\s*[×x](\d+)$/i);
+if (m1) return { qty: m1[1], name: m1[2].trim() };
+if (m2) return { qty: m2[2], name: m2[1].trim() };
+return { qty: '1', name: line };
   }
 
   const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -719,7 +736,7 @@ function printOrder(encodedData) {
       <div class="ticket-tagline">Sistema de Pedidos</div>
     </div>
     <div class="ticket-info">
-      <div class="ticket-info-row"><span class="ticket-info-label">PEDIDO #</span><span class="ticket-info-value">${String(order.index||'—').padStart(3,'0')}</span></div>
+      <span class="ticket-info-value">#${String(order.index||'—').padStart(3,'0')}</span>
       <div class="ticket-info-row"><span class="ticket-info-label">FECHA/HORA</span><span class="ticket-info-value">${esc((order.fecha||'')+' '+(order.hora||''))}</span></div>
     </div>
     <div class="ticket-client">
@@ -735,7 +752,9 @@ function printOrder(encodedData) {
     ${order.entrega  ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">ENTREGA</span><span class="ticket-info-value">${esc(order.entrega)}</span></div>` : ''}
     ${order.direccion? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">DIRECCIÓN</span><span class="ticket-info-value" style="max-width:60%;text-align:right">${esc(order.direccion)}</span></div>` : ''}
     ${order.pago     ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">PAGO</span><span class="ticket-info-value">${esc(order.pago)}</span></div>` : ''}
-    ${totalHtml}
+${order.efectivo ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">PAGA CON</span><span class="ticket-info-value">${esc(order.efectivo)}</span></div>` : ''}
+${(() => { const paga = parseInt(String(order.efectivo||'').replace(/\D/g,'')); const tot = parseInt(String(order.total||'').replace(/\D/g,'')); const dev = paga - tot; return (paga > 0 && dev > 0) ? `<div class="ticket-info-row" style="margin-bottom:4px"><span class="ticket-info-label">DEVUELTA</span><span class="ticket-info-value">$${dev.toLocaleString('es-CO')}</span></div>` : ''; })()}
+${totalHtml}
     <div class="ticket-footer">
       <div>¡Gracias por tu pedido!</div>
       <div class="footer-brand">powered by AIMAX</div>
