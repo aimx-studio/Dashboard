@@ -275,7 +275,7 @@ function createOrderCard(order) {
     id: order.id, index: order.index, cliente: order.cliente,
     telefono: order.telefono, fecha: order.fecha, hora: order.hora,
     pedido: order.pedido, items: order.items, entrega: order.entrega,
-    direccion: order.direccion, pago: order.pago, extras: order.extras, total: order.total
+    direccion: order.direccion, pago: order.pago, extras: order.extras, total: order.total, efectivo: order.efectivo
   }));
 
   return `
