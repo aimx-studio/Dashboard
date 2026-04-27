@@ -190,14 +190,12 @@
           <select id="ventasMesFilter" class="config-input" style="width:auto;padding:6px 12px" onchange="renderVentas()">
   <option value="month" selected>Este mes</option>
   <option value="day">Hoy</option>
+  <option value="yesterday">Ayer</option>
   <option value="week">Esta semana</option>
   <option value="year">Este año</option>
   <option value="all">Todo el período</option>
 </select>
-          <button class="btn-export" onclick="exportVentasExcel()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Excel
-          </button>
+
         </div>
       </div>
 
@@ -261,9 +259,10 @@
           <h3 class="tpc-title">📦 Ventas por Producto</h3>
           <div class="filter-tabs" style="margin:0">
             <button class="filter-tab active" onclick="setVentasProductoPeriodo('day',this)">Hoy</button>
-            <button class="filter-tab" onclick="setVentasProductoPeriodo('week',this)">Semana</button>
-            <button class="filter-tab" onclick="setVentasProductoPeriodo('month',this)">Mes</button>
-            <button class="filter-tab" onclick="setVentasProductoPeriodo('all',this)">Todo</button>
+<button class="filter-tab" onclick="setVentasProductoPeriodo('yesterday',this)">Ayer</button>
+<button class="filter-tab" onclick="setVentasProductoPeriodo('week',this)">Semana</button>
+<button class="filter-tab" onclick="setVentasProductoPeriodo('month',this)">Mes</button>
+<button class="filter-tab" onclick="setVentasProductoPeriodo('all',this)">Todo</button>
           </div>
         </div>
         <div id="ventasProductoList" class="top-products-list"></div>

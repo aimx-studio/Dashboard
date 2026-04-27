@@ -169,7 +169,7 @@ function parseDate(fecha, hora) {
 
 function parseItems(pedido) {
   if (!pedido) return [];
-  return pedido.split(/[,\n]/).map(s => s.trim().replace(/^[•\-\*]+\s*/, '')).filter(Boolean);
+  return pedido.split(/[•\n,]/).map(s => s.trim().replace(/^[•\-\*]+\s*/, '')).filter(Boolean);
 }
 
 /* ── PARSEAR TOTAL A NÚMERO ── */
@@ -421,9 +421,12 @@ function renderVentasProducto() {
   orders.forEach(o => {
     o.items.forEach(item => {
       // DESPUÉS
-const m = item.match(/^(.+?)\s*[×x]\s*(\d+)$/i) || item.match(/^(\d+)[x×]\s*(.+)/i);
-const qty  = m ? parseInt(m[2] ?? m[1]) : 1;
-const name = (m ? (m[1].match(/^\d+$/) ? m[2] : m[1]) : item).trim();
+const m1 = item.match(/^(\d+)\s*[×x]\s*(.+)/i);   // "1 × Nombre"
+const m2 = item.match(/^(.+?)\s*[×x]\s*(\d+)$/i);  // "Nombre × 1"
+const qty  = m1 ? parseInt(m1[1]) : m2 ? parseInt(m2[2]) : 1;
+const name = m1 ? m1[2].replace(/\s*—.*$/, '').trim()
+           : m2 ? m2[1].trim()
+           : item.replace(/\s*—.*$/, '').trim();
       if (name) freq[name] = (freq[name] || 0) + qty;
     });
   });
